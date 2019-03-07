@@ -57,8 +57,19 @@ if ($_POST) {
     } catch (Exception $ex) {
         $errors['password'] = $ex->getMessage();
     }
+    
+//    echo $user->user_name;
 
+    if(!empty($_POST['password']) && $_POST['retype_password']){
+        if($_POST['password'] !== $_POST['retype_password']){
+            $errors['retype_password'] = "Password and Ret;6ype Password not match";
+        }
+        
+    }else{
+        $errors['retype_password'] = "Retype Password is also required";
+    }
     // retype passowrd
+    
 
     try {
         $user->gender = !empty($_POST['gender']) ? $_POST['gender'] : '';
@@ -71,7 +82,14 @@ if ($_POST) {
         $errors['image'] = $ex->getMessage();
     }
     
-    dd($errors);
+    if(empty($errors)){
+//        $addUser = $user->addToUser();
+        if(true){
+            $user->uploadProfileImage($_FILES['image']['tmp_name']);
+        }
+    }else{
+        
+    }
 } 
 
 ?>
