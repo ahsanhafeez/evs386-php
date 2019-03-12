@@ -1,4 +1,10 @@
 <?php
+session_start();
+//echo "<pre>";
+//print_r($_SESSION);
+//die;
+define('BASE_URL', __DIR__ . "/");
+//define('BASE_URL', __DIR__ . "/");
 require_once './Models/User.php';
 
 function dd($arg) {
@@ -6,6 +12,7 @@ function dd($arg) {
     print_r($arg);
     die;
 }
+
 function dd1($arg) {
     echo "<pre>";
     var_dump($arg);
@@ -44,9 +51,9 @@ if ($_POST) {
         $dateOfBirth['day'] = !empty($_POST['day']) ? (int) $_POST['day'] : '';
         $dateOfBirth['month'] = !empty($_POST['month']) ? (int) $_POST['month'] : '';
 //        $dateOfBirth['month'] = 2;
-        $dateOfBirth['year'] = !empty($_POST['year']) ? (int) $_POST['year'] : '';;
+        $dateOfBirth['year'] = !empty($_POST['year']) ? (int) $_POST['year'] : '';
+        ;
         $user->dob = $dateOfBirth;
-        
     } catch (Exception $ex) {
         $errors['dob'] = $ex->getMessage();
     }
@@ -57,19 +64,18 @@ if ($_POST) {
     } catch (Exception $ex) {
         $errors['password'] = $ex->getMessage();
     }
-    
+
 //    echo $user->user_name;
 
-    if(!empty($_POST['password']) && $_POST['retype_password']){
-        if($_POST['password'] !== $_POST['retype_password']){
+    if (!empty($_POST['password']) && $_POST['retype_password']) {
+        if ($_POST['password'] !== $_POST['retype_password']) {
             $errors['retype_password'] = "Password and Ret;6ype Password not match";
         }
-        
-    }else{
+    } else {
         $errors['retype_password'] = "Retype Password is also required";
     }
-    // retype passowrd
-    
+// retype passowrd
+
 
     try {
         $user->gender = !empty($_POST['gender']) ? $_POST['gender'] : '';
@@ -81,17 +87,26 @@ if ($_POST) {
     } catch (Exception $ex) {
         $errors['image'] = $ex->getMessage();
     }
-    
-    if(empty($errors)){
-//        $addUser = $user->addToUser();
-        if(true){
-            $user->uploadProfileImage($_FILES['image']['tmp_name']);
-        }
-    }else{
-        
-    }
-} 
 
+    if (empty($errors)) {
+        try {
+            $addUser = $user->addToUser();
+            if ($addUser) {
+                $user->uploadProfileImage($_FILES['image']['tmp_name']);
+            }
+        } catch (Exception $ex) {
+            $errors['users'] = $ex->getMessage();
+        }
+        if(!empty($errors)){
+            $_SESSION['errors'] = serialize($errors);
+        }else{
+            unset($_SESSION['errors']);
+            header("Location: http://localhost/evs/evs386/php/28-02-2019/login.php");
+        }
+    } else {
+        $_SESSION['errors'] = serialize($errors);
+    }
+}
 ?>
 <style>
     .registration{
@@ -100,7 +115,20 @@ if ($_POST) {
         margin: 0 auto;   
     }
 </style>
-
+<?php
+$errors = !empty($_SESSION['errors']) ? unserialize($_SESSION['errors']) : '';
+?>
+<ul>
+    <?php
+    if (!empty($errors)) {
+        foreach ($errors as $key => $error) {
+            ?>
+            <li><?php echo $error; ?></li>
+            <?php
+        }
+    }
+    ?>
+</ul>
 <form method="post" action="" class="registration" enctype="multipart/form-data">
     <input type="text" name="user_name" placeholder="User Name"><br>
     <input type="text" name="name" placeholder="Enter Your name"><br>

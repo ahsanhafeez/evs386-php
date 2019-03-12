@@ -1,37 +1,35 @@
 <?php
 
 class DataBaseConnection {
-    
+
     protected $con;
 
     public function __construct() {
         $this->getConnection();
     }
-    
+
     public function getConnection() {
         $mySql = new mysqli();
-        
+
         $mySql->connect('127.0.0.1', 'root', '');
-        
-        if(!empty($mySql->connect_errno)){
+
+        if (!empty($mySql->connect_errno)) {
             throw new Exception("Connection not created");
         }
-        
-        
+
+
         $mySql->select_db('evs386');
-        
-        if($mySql->error){
+
+        if ($mySql->error) {
             throw new Exception("Database name not correct");
         }
-        
-        $this->con =  $mySql;
-        
+
+        $this->con = $mySql;
     }
 
 }
 
-
-class User extends DataBaseConnection{
+class User extends DataBaseConnection {
 
     private $user_name;
     private $name;
@@ -72,8 +70,8 @@ class User extends DataBaseConnection{
         }
         $this->user_name = $value;
     }
-    
-    private function getUserName(){
+
+    private function getUserName() {
         return $this->user_name;
     }
 
@@ -84,6 +82,7 @@ class User extends DataBaseConnection{
         }
         $this->name = $value;
     }
+
     private function getName() {
         return $this->name;
     }
@@ -97,7 +96,7 @@ class User extends DataBaseConnection{
         }
         $this->email = $value;
     }
-    
+
     private function getEmail() {
         return $this->email;
     }
@@ -115,7 +114,7 @@ class User extends DataBaseConnection{
 
         $this->dob = $dob;
     }
-    
+
     private function getDob() {
         return $this->dob;
     }
@@ -133,7 +132,7 @@ class User extends DataBaseConnection{
 
         $this->password = sha1($value);
     }
-    
+
     private function getPassword() {
         return $this->password;
     }
@@ -165,49 +164,74 @@ class User extends DataBaseConnection{
 
         $this->profile_image = $this->user_name . '.' . $ext;
     }
-    
+
     private function getProfileImage() {
         return $this->profile_image;
     }
-    
-    private function setGender($value){
+
+    private function setGender($value) {
         $value = trim($value);
         if (empty($value)) {
             throw new Exception("Gender requried");
         }
         $this->gender = $value;
     }
-    
-    private function getGender(){
+
+    private function getGender() {
         return $this->gender;
     }
 
-    
-    public function addToUser(){
-        dd('here');
+    public function addToUser() {
+        $mysql = $this->con;
+
+        $addUserQuery = "INSERT INTO `users` "
+                . "(`id` ,`user_name` ,`name` ,`password` ,`email` ,`gender` ,`profile_image`)"
+                . "VALUES"
+                . "(NULL, '$this->user_name' , '$this->name', '$this->password', '$this->email', '$this->gender', '$this->profile_image')";
+
+
+        $addUser = $mysql->query($addUserQuery);
+        if($mysql->errno){
+            throw new Exception($mysql->error);
+        }
+        return $addUser;
+    }
+
+    public function uploadProfileImage($imagePath) {
+
+        $uploadImage = BASE_URL . "users/" . $this->username . '/';
+        if (!is_dir(BASE_URL . 'users')) {
+            mkdir(BASE_URL . 'users');
+        }
+
+        if (!is_dir(BASE_URL . 'users/' . $this->user_name)) {
+            mkdir(BASE_URL . 'users/' . $this->user_name);
+        }
+
+        $upload = move_uploaded_file($imagePath, $uploadImage . $this->profile_image);
+        if (!$upload) {
+            throw new Exception("Image Not Upload");
+        }
     }
     
-    public function uploadProfileImage($imagePath){
+    public function getUserDetail(){
         
-        $uploadImage = "../users/" . $this->username . '/';
-//        dd(__FILE__);
-//        dd1(__DIR__ .'/../users');
-        if(!is_dir(__DIR__ .'/../users')){
-            mkdir(__DIR__ .'/../users');
+        $mySql = $this->con;
+        
+        $getUserQuery = "SELECT * from `users` where email = '$this->email' AND password = '$this->password'";
+//        dd($getUserQuery);
+        $user = $mySql->query($getUserQuery);
+        
+        
+        
+        if($user->num_rows > 0){
+            $userData = mysqli_fetch_assoc($user);
+            return $userData;
+        }else{
+            throw new Exception("User Not Found");
         }
-        
-        if(!is_dir(__DIR__ .'/../users/'.$this->user_name)){
-            mkdir(__DIR__ .'/../users/'.$this->user_name);
-        }
-        
-        
-//        $upload = move_uploaded_file($imagePath, $uploadImage);
-//        
-        dd($upload);
-//        dd($uploadImage);
     }
-    
-    
+
 }
 ?>
 
